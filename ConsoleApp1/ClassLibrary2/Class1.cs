@@ -118,7 +118,68 @@ namespace Box
             Array.Sort(dims1);
             Array.Sort(dims2);
 
+            double a = Math.Max(dims1[0], dims2[0]);
+            double b = Math.Max(dims1[1], dims2[1]);
+            double c = dims1[2] + dims2[2];
 
+            return new Pudelko(a, b, c);
         }
+
+        public static explicit operator double[](Pudelko p)
+            => new double[] {p.A, p.B, p.C};
+
+        public static implicit operator Pudelko((int a, int b, int c,) dims)
+            => new Pudelko(dims.a, dims.b, dims.c, UnitOfMeasure.milimeter);
+
+        public double this[int index] => index switch
+        {
+            0 => A,
+            1 => B,
+            2 => C,
+            _ => throw new IndexOutOfRangeException()
+        };
+
+        public IEnumerator<<double> GetEnumerator()
+        {
+            yield return A;
+            yield return B; 
+            yield return C;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public static Pudelko Parse(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                throw new FormatException();
+
+            string[] parts = input.Split("×");
+            if (parts.Length != 3)
+                throw new FormatException();
+
+            double[] values = new double[3];
+            UnitOfMeasure unit = UnitOfMeasure.meter;
+
+            for (int i = 0; i < 3; i++)
+            {
+                var trimmed = parts[i].Trim().Split(' ');
+                values[i] = double.Parse(trimmed[0], CultureInfo.InvariantCulture);
+
+                if (i == 0)
+                {
+                    unit = trimmed[1] switch
+                    {
+                        "mm" => UnitOfMeasure.milimeter,
+                        "cm" => UnitOfMeasure.centimeter,
+                        "m" => UnitOfMeasure.meter,
+                        _ => throw new FormatException()
+                    };
+                }
+            }
+
+            return new Pudelko(values[0], values[1], values[2], unit);
+        }
+    }
+}
     }
 }
